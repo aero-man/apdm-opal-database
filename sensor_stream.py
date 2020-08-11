@@ -74,7 +74,8 @@ class SensorStream:
         logger.logger.debug("Raw record received: {0}".format(raw_record))
         clean_record = self._raw_record_to_gyro_accel_and_mag(raw_record)
         logger.logger.debug("Clean record: {0}".format(clean_record))
-        self._calc_sensor_latency(clean_record[0][0], clean_record[0][1]) # use sensor timestamp and
+        sensor_latency = self._calc_sensor_latency(clean_record[0][0], clean_record[0][1]) # compare sensor and computer timestamps
+        logger.logger.debug("Current sensor latency: {0}".format(sensor_latency))
         return clean_record
 
     def stop(self):
@@ -132,12 +133,10 @@ class SensorStream:
         Calculate latency for APDM Opal sensors in seconds
         
         When sensor data is lost, a timestamp gets passed to this function.
-        This is accommodated below by returning False.
+        This is accommodated by returning False.
         '''
         sensor_latency = float(computer_timestamp) - float(sensor_timestamp)/1000000
-        logger.logger.debug("Current sensor latency (s): {0}, Sensor Timestamp: {1}"
-            .format(sensor_latency, sensor_timestamp))
-        if self._is_timestamp(sensor_latency): # Avoid timestamp error by returning False
+        if self._is_timestamp(sensor_latency): # Avoid timestamp confusion by returning False
             sensor_latency = False
         return sensor_latency
 
@@ -146,6 +145,6 @@ class SensorStream:
         Check if a number is a timestamp from the computer by looking
         for a decimal point at index 10. 
         '''
-        if num[10] == ".":
+        if str(num)[10] == ".":
             return True
         return False
